@@ -66,3 +66,6 @@ The main logic is contained in `src/main.cpp`:
 *   **`drawScreen()`:** Renders the user interface on the OLED display.
 *   **`updateMotor()`:** Applies the current speed value to the motor via PWM.
 *   **Input Handlers (`checkEncoder`, `handle...Click`)**: These functions process input from the rotary encoder and buttons to modify the motor's state.
+<img width="628" height="500" alt="image" src="https://github.com/user-attachments/assets/d279e88e-3419-4823-b199-5a1f49a762d0" />
+<img width="1024" height="847" alt="image" src="https://github.com/user-attachments/assets/956140d6-31c1-4f12-8737-bb765dde42b4" />
+<img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/ea4ffda1-cae2-4b3b-a448-382bd691f966" />

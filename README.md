@@ -19,6 +19,7 @@ This project is a sophisticated motor controller for a 12V DC motor, built using
 | L298N H-Bridge Motor Driver             | Drives the high-current DC motor.           |
 | 12V DC Geared Motor (e.g., 3 RPM)       | The motor being controlled.                 |
 | SH1106 1.3" OLED Module with Encoder    | User interface for display and input.       |
+| CA-1235 Buck Converter Module           | Steps down 12V to 5V for the ESP32.         |
 | 12V DC Power Supply                     | Powers the L298N driver and the motor.      |
 | Jumper Wires                            | For making connections.                     |
 

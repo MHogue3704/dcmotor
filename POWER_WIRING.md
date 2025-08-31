@@ -1,6 +1,6 @@
 # Power Distribution Wiring Guide
 
-This guide explains how to power all components (ESP32-C3, L298N, and OLED) from a single 12V power supply using a CA-1235 buck converter. This setup is essential for a stable, self-contained project without relying on USB power for the microcontroller.
+This guide explains how to power all components (ESP32, L298N, and OLED) from a single 12V power supply using a CA-1235 buck converter. This setup is essential for a stable, self-contained project without relying on USB power for the microcontroller.
 
 ## Components
 
@@ -32,8 +32,8 @@ The goal is to distribute power from the 12V supply to the L298N directly and to
         *   CA-1235 `IN-` terminal.
 
 2.  **Buck Converter (5V Out) to ESP32:**
-    *   **CA-1235 `OUT+`** → **ESP32-C3 `5V` pin**.
-    *   **CA-1235 `OUT-`** → **ESP32-C3 `GND` pin**.
+    *   **CA-1235 `OUT+`** → **ESP32 `5V` pin**.
+    *   **CA-1235 `OUT-`** → **ESP32 `GND` pin**.
 
 3.  **Common Ground:**
     *   A common ground is essential. By connecting the 12V PSU's negative line to both the L298N and the buck converter's input, and the buck converter's output ground to the ESP32, all components will share the same ground reference.
@@ -48,10 +48,10 @@ The goal is to distribute power from the 12V supply to the L298N directly and to
 
                       +---------------------+
 12V PSU (+) --------->| CA-1235 IN+         |
-                      |         OUT+ (5V) --+--> ESP32-C3 (5V Pin)
+                      |         OUT+ (5V) --+--> ESP32 (5V Pin)
                       |                     |
 12V PSU (-) --+------>| CA-1235 IN-         |
-              |       |         OUT- (GND)--+--> ESP32-C3 (GND Pin)
+              |       |         OUT- (GND)--+--> ESP32 (GND Pin)
               |       +---------------------+
               |
               |       +---------------------+

@@ -1,10 +1,10 @@
-# Wiring Guide: ESP32-C3 with SH1106 OLED & Rotary Encoder Module
+# Wiring Guide: ESP32 with SH1106 OLED & Rotary Encoder Module
 
-This guide details how to connect your ESP32-C3 to the SH1106 OLED module with an integrated rotary encoder.
+This guide details how to connect your ESP32 to the SH1106 OLED module with an integrated rotary encoder.
 
 ## Components
 
-*   ESP32-C3 Development Board
+*   ESP32 Development Board
 *   SH1106 OLED Module with Rotary Encoder
 *   Jumper Wires
 
@@ -22,30 +22,30 @@ The pins on your module are labeled as follows:
 
 ## Wiring Connections
 
-Connect the pins from the OLED module to your ESP32-C3 as follows. These pins are chosen to avoid conflict with the motor driver pins.
+Connect the pins from the OLED module to your ESP32 as follows. These pins are chosen to avoid conflict with the motor driver pins.
 
-*   **OLED `VCC`** → **ESP32-C3 `3V3`**
-*   **OLED `GND`** → **ESP32-C3 `GND`**
-*   **OLED `SCL`** → **ESP32-C3 `GPIO5`** (I2C Clock)
-*   **OLED `SDA`** → **ESP32-C3 `GPIO6`** (I2C Data)
-*   **OLED `TRA`** → **ESP32-C3 `GPIO7`** (Encoder Pin A)
-*   **OLED `TRB`** → **ESP32-C3 `GPIO8`** (Encoder Pin B)
-*   **OLED `PSH`** → **ESP32-C3 `GPIO9`** (Encoder Push Button)
-*   **OLED `BAK`** → **ESP32-C3 `GPIO10`** (Back Button)
-*   **OLED `CON`** → **ESP32-C3 `GPIO18`** (Confirm Button)
+*   **OLED `VCC`** → **ESP32 `3V3`**
+*   **OLED `GND`** → **ESP32 `GND`**
+*   **OLED `SCL`** → **ESP32 `GPIO22`** (I2C Clock)
+*   **OLED `SDA`** → **ESP32 `GPIO21`** (I2C Data)
+*   **OLED `TRA`** → **ESP32 `GPIO25`** (Encoder Pin A)
+*   **OLED `TRB`** → **ESP32 `GPIO26`** (Encoder Pin B)
+*   **OLED `PSH`** → **ESP32 `GPIO27`** (Encoder Push Button)
+*   **OLED `BAK`** → **ESP32 `GPIO32`** (Back Button)
+*   **OLED `CON`** → **ESP32 `GPIO33`** (Confirm Button)
 
 ## Summary Diagram
 
 ```
-ESP32-C3                SH1106 Module
+ESP32                   SH1106 Module
 --------                -------------
   3V3  ────────────────→   VCC
   GND  ────────────────→   GND
-GPIO5  ────────────────→   SCL
-GPIO6  ────────────────→   SDA
-GPIO7  ────────────────→   TRA
-GPIO8  ────────────────→   TRB
-GPIO9  ────────────────→   PSH
-GPIO10 ────────────────→   BAK
-GPIO18 ────────────────→   CON
+GPIO22 ────────────────→   SCL
+GPIO21 ────────────────→   SDA
+GPIO25 ────────────────→   TRA
+GPIO26 ────────────────→   TRB
+GPIO27 ────────────────→   PSH
+GPIO32 ────────────────→   BAK
+GPIO33 ────────────────→   CON
 ```

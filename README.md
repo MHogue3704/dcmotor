@@ -1,6 +1,6 @@
 # ESP32 DC Motor Controller with OLED Interface
 
-This project is a sophisticated motor controller for a 12V DC motor, built using an ESP32-C3 microcontroller. It features a user-friendly interface with an SH1106 OLED display and a rotary encoder for precise speed adjustments, making it ideal for applications requiring fine-tuned motor control.
+This project is a sophisticated motor controller for a 12V DC motor, built using an ESP32 microcontroller. It features a user-friendly interface with an SH1106 OLED display and a rotary encoder for precise speed adjustments, making it ideal for applications requiring fine-tuned motor control.
 
 ## Features
 
@@ -15,7 +15,7 @@ This project is a sophisticated motor controller for a 12V DC motor, built using
 
 | Component                               | Purpose                                     |
 | --------------------------------------- | ------------------------------------------- |
-| ESP32-C3 Development Board              | Main microcontroller for logic and control. |
+| ESP32 Development Board              | Main microcontroller for logic and control. |
 | L298N H-Bridge Motor Driver             | Drives the high-current DC motor.           |
 | 12V DC Geared Motor (e.g., 3 RPM)       | The motor being controlled.                 |
 | SH1106 1.3" OLED Module with Encoder    | User interface for display and input.       |
@@ -43,7 +43,7 @@ This project is managed using PlatformIO.
     cd dcmotor
     ```
 3.  **Open in PlatformIO:** Open the cloned folder in VS Code with the PlatformIO extension installed.
-4.  **Build & Upload:** PlatformIO will automatically detect the `platformio.ini` file and download the required libraries (`U8g2`, `RotaryEncoder`, `OneButton`). Once the dependencies are installed, build and upload the project to your ESP32-C3.
+4.  **Build & Upload:** PlatformIO will automatically detect the `platformio.ini` file and download the required libraries (`U8g2`, `RotaryEncoder`, `OneButton`). Once the dependencies are installed, build and upload the project to your ESP32.
 
 ## How to Use
 

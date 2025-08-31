@@ -7,18 +7,18 @@
 // --- Pin Definitions ---
 
 // L298N Motor Driver Pins
-const int MOTOR_IN1 = 2;
-const int MOTOR_IN2 = 3;
-const int MOTOR_ENA = 4;
+const int MOTOR_IN1 = 13;
+const int MOTOR_IN2 = 12;
+const int MOTOR_ENA = 14;
 
 // SH1106 OLED & Encoder Module Pins
-const int OLED_SCL = 5;
-const int OLED_SDA = 6;
-const int ENC_A = 7;
-const int ENC_B = 8;
-const int ENC_BTN = 9;
-const int BACK_BTN = 10;
-const int CONFIRM_BTN = 18;
+const int OLED_SCL = 22;
+const int OLED_SDA = 21;
+const int ENC_A = 25;
+const int ENC_B = 26;
+const int ENC_BTN = 27;
+const int BACK_BTN = 32;
+const int CONFIRM_BTN = 33;
 
 // --- PWM Configuration ---
 const int PWM_CHANNEL = 0;

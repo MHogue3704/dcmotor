@@ -58,3 +58,38 @@ ESP32 GPIO14 ----> L298N ENA
 L298N OUT1 --------> DC Motor
 L298N OUT2 --------> DC Motor
 ```
+flowchart TD
+    PSU[12V Power Supply]
+    Buck[CA-1235 Buck Converter]
+    ESP32[ESP32 Development Board]
+    L298N[L298N Motor Driver]
+    Motor[12V DC Motor]
+    OLED[SH1106 OLED Module]
+    Encoder[Rotary Encoder (on OLED Module)]
+
+    %% Power Distribution
+    PSU -- +12V --> L298N
+    PSU -- +12V --> Buck
+    PSU -- GND --> L298N
+    PSU -- GND --> Buck
+
+    Buck -- 5V --> ESP32
+    Buck -- GND --> ESP32
+
+    %% Motor Driver Wiring
+    ESP32 -- GPIO13 --> L298N_IN1["L298N IN1"]
+    ESP32 -- GPIO12 --> L298N_IN2["L298N IN2"]
+    ESP32 -- GPIO14 --> L298N_ENA["L298N ENA"]
+    L298N -- OUT1 --> Motor
+    L298N -- OUT2 --> Motor
+
+    %% OLED & Encoder Wiring
+    ESP32 -- 3V3 --> OLED
+    ESP32 -- GND --> OLED
+    ESP32 -- GPIO22 --> OLED_SCL["OLED SCL"]
+    ESP32 -- GPIO21 --> OLED_SDA["OLED SDA"]
+    ESP32 -- GPIO25 --> OLED_TRA["Encoder TRA"]
+    ESP32 -- GPIO26 --> OLED_TRB["Encoder TRB"]
+    ESP32 -- GPIO27 --> OLED_PSH["Encoder PSH"]
+    ESP32 -- GPIO32 --> OLED_BAK["OLED BAK"]
+    ESP32 -- GPIO33 --> OLED_CON["OLED CON"]

@@ -34,9 +34,11 @@ const int MAX_SPEED = 255;
 
 // --- Object Declarations ---
 
-// U8g2 OLED Display
-// Using U8G2_SH1106_128X64_NONAME_F_HW_I2C for hardware I2C
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+// Onboard OLED (SSD1306 or SH1106)
+// Example: onboard SSD1306 at 0x3C, external SH1106 at 0x3C or 0x3D
+#include <U8g2lib.h>
+U8G2_SH1106_128X64_NONAME_F_HW_I2C sh1106_u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); // External SH1106
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C onboard_u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); // Onboard OLED (change type if needed)
 
 // Rotary Encoder
 RotaryEncoder encoder(ENC_A, ENC_B, RotaryEncoder::LatchMode::FOUR3);
@@ -47,12 +49,16 @@ OneButton backButton(BACK_BTN, true);
 OneButton confirmButton(CONFIRM_BTN, true);
 
 // --- Function Prototypes ---
-void drawScreen();
+void drawOnboardScreen();
+void drawSH1106Screen();
 void updateMotor();
 void checkEncoder();
 void handleEncoderClick();
 void handleBackClick();
 void handleConfirmClick();
+
+unsigned long totalRunTimeMs = 0;
+unsigned long lastRunUpdate = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -70,11 +76,16 @@ void setup() {
 
   // I2C and Display Setup
   Wire.begin(OLED_SDA, OLED_SCL);
-  if (!u8g2.begin()) {
-    Serial.println("U8g2 init failed!");
+  if (!onboard_u8g2.begin()) {
+    Serial.println("Onboard OLED init failed!");
     while (1);
   }
-  u8g2.setFont(u8g2_font_ncenB08_tr); // Set a nice font
+  onboard_u8g2.setFont(u8g2_font_ncenB08_tr);
+  if (!sh1106_u8g2.begin()) {
+    Serial.println("SH1106 OLED init failed!");
+    while (1);
+  }
+  sh1106_u8g2.setFont(u8g2_font_ncenB08_tr);
 
   // Button Setup
   encoderButton.attachClick(handleEncoderClick);
@@ -83,7 +94,8 @@ void setup() {
 
   // Initial State
   updateMotor();
-  drawScreen();
+  drawOnboardScreen();
+  drawSH1106Screen();
 
   Serial.println("Initialization complete.");
 }
@@ -95,40 +107,80 @@ void loop() {
   backButton.tick();
   confirmButton.tick();
 
-  // The loop continuously updates inputs and redraws the screen.
-  // For this simple case, we could redraw only on change, but this is fine.
-  drawScreen();
+  // Update running time if motor is running
+  if (motorRunning) {
+    unsigned long now = millis();
+    if (lastRunUpdate == 0) lastRunUpdate = now;
+    totalRunTimeMs += (now - lastRunUpdate);
+    lastRunUpdate = now;
+  } else {
+    lastRunUpdate = millis();
+  }
+
+  drawOnboardScreen();
+  drawSH1106Screen();
   delay(100); // Small delay to prevent screen flicker and CPU overload
 }
 
 // --- Core Functions ---
 
-void drawScreen() {
-  u8g2.clearBuffer();
-  
-  // Title
-  u8g2.drawStr(0, 10, "Motor Speed Control");
-  u8g2.drawHLine(0, 14, 128);
+void drawOnboardScreen() {
+  onboard_u8g2.clearBuffer();
+  onboard_u8g2.drawStr(0, 10, "Debug Info");
+  onboard_u8g2.drawHLine(0, 14, 128);
 
   // Motor Status
-  u8g2.drawStr(0, 30, "Status:");
-  u8g2.drawStr(50, 30, motorRunning ? "ON" : "OFF");
+  onboard_u8g2.drawStr(0, 25, "Motor:");
+  onboard_u8g2.drawStr(50, 25, motorRunning ? "ON" : "OFF");
 
   // Speed Value
-  u8g2.drawStr(0, 45, "Speed:");
+  onboard_u8g2.drawStr(0, 38, "Speed:");
+  char speedStr[8];
+  sprintf(speedStr, "%d", motorSpeed);
+  onboard_u8g2.drawStr(50, 38, speedStr);
+
+  // Total Run Time
+  onboard_u8g2.drawStr(0, 51, "Run Time:");
+  unsigned long sec = totalRunTimeMs / 1000;
+  unsigned long min = sec / 60;
+  unsigned long hr = min / 60;
+  char timeStr[16];
+  sprintf(timeStr, "%02luh %02lum %02lus", hr, min % 60, sec % 60);
+  onboard_u8g2.drawStr(50, 51, timeStr);
+
+  // Debug (show saved speed)
+  onboard_u8g2.drawStr(0, 64, "Saved:");
+  char savedStr[8];
+  sprintf(savedStr, "%d", savedSpeed);
+  onboard_u8g2.drawStr(50, 64, savedStr);
+
+  onboard_u8g2.sendBuffer();
+}
+
+void drawSH1106Screen() {
+  sh1106_u8g2.clearBuffer();
+  sh1106_u8g2.drawStr(0, 10, "Motor Speed Control");
+  sh1106_u8g2.drawHLine(0, 14, 128);
+
+  // Motor Status
+  sh1106_u8g2.drawStr(0, 30, "Status:");
+  sh1106_u8g2.drawStr(50, 30, motorRunning ? "ON" : "OFF");
+
+  // Speed Value
+  sh1106_u8g2.drawStr(0, 45, "Speed:");
   char speedStr[5];
   sprintf(speedStr, "%d", motorSpeed);
-  u8g2.drawStr(50, 45, speedStr);
+  sh1106_u8g2.drawStr(50, 45, speedStr);
 
   // Display saved speed if different
   if (motorSpeed != savedSpeed) {
-    u8g2.drawStr(80, 45, "(Unsaved)");
+    sh1106_u8g2.drawStr(80, 45, "(Unsaved)");
   }
 
   // Instructions
-  u8g2.drawStr(0, 60, "Click knob=On/Off | CON=Save");
+  sh1106_u8g2.drawStr(0, 60, "Click knob=On/Off | CON=Save");
 
-  u8g2.sendBuffer();
+  sh1106_u8g2.sendBuffer();
 }
 
 void updateMotor() {

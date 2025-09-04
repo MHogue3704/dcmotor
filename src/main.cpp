@@ -26,8 +26,8 @@ const int PWM_FREQUENCY = 5000;
 const int PWM_RESOLUTION = 8; // 0-255
 
 // --- Global Variables ---
-int motorSpeed = 60; // Current PWM value (0-255)
-int savedSpeed = 60; // Speed that is "confirmed"
+int motorSpeed = 65; // Current PWM value (0-255)
+int savedSpeed = 65; // Speed that is "confirmed"
 bool motorRunning = true;
 const int MIN_SPEED = 0;
 const int MAX_SPEED = 255;
@@ -38,10 +38,10 @@ const int MAX_SPEED = 255;
 // Example: onboard SSD1306 at 0x3C, external SH1106 at 0x3C or 0x3D
 #include <U8g2lib.h>
 U8G2_SH1106_128X64_NONAME_F_HW_I2C sh1106_u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); // External SH1106
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C onboard_u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); // Onboard OLED (change type if needed)
+// U8G2_SSD1306_128X64_NONAME_F_HW_I2C onboard_u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE); // Onboard OLED (change type if needed)
 
 // Rotary Encoder
-RotaryEncoder encoder(ENC_A, ENC_B, RotaryEncoder::LatchMode::FOUR3);
+RotaryEncoder encoder(ENC_A, ENC_B, RotaryEncoder::LatchMode::FOUR0);
 
 // Buttons
 OneButton encoderButton(ENC_BTN, true); // 'true' for active low
@@ -56,11 +56,15 @@ void checkEncoder();
 void handleEncoderClick();
 void handleBackClick();
 void handleConfirmClick();
+void handleLongPressConfirm();
 
 unsigned long totalRunTimeMs = 0;
 unsigned long lastRunUpdate = 0;
 
 void setup() {
+  // Enable internal pull-ups for rotary encoder pins
+  pinMode(ENC_A, INPUT_PULLUP);
+  pinMode(ENC_B, INPUT_PULLUP);
   Serial.begin(115200);
   Serial.println("Motor Controller with OLED Initializing...");
 
@@ -76,11 +80,7 @@ void setup() {
 
   // I2C and Display Setup
   Wire.begin(OLED_SDA, OLED_SCL);
-  if (!onboard_u8g2.begin()) {
-    Serial.println("Onboard OLED init failed!");
-    while (1);
-  }
-  onboard_u8g2.setFont(u8g2_font_ncenB08_tr);
+  // Removed onboard OLED initialization
   if (!sh1106_u8g2.begin()) {
     Serial.println("SH1106 OLED init failed!");
     while (1);
@@ -89,12 +89,14 @@ void setup() {
 
   // Button Setup
   encoderButton.attachClick(handleEncoderClick);
-  backButton.attachClick(handleBackClick);
-  confirmButton.attachClick(handleConfirmClick);
+  backButton.attachClick(handleConfirmClick); // Now increases speed
+  confirmButton.attachClick(handleBackClick); // Now decreases speed
+  backButton.attachLongPressStart(handleLongPressConfirm);
+  confirmButton.attachLongPressStart(handleLongPressConfirm);
 
   // Initial State
   updateMotor();
-  drawOnboardScreen();
+  // Removed drawOnboardScreen call
   drawSH1106Screen();
 
   Serial.println("Initialization complete.");
@@ -117,45 +119,14 @@ void loop() {
     lastRunUpdate = millis();
   }
 
-  drawOnboardScreen();
+  // Removed drawOnboardScreen call
   drawSH1106Screen();
-  delay(100); // Small delay to prevent screen flicker and CPU overload
+  // Removed delay for maximum encoder polling frequency
 }
 
 // --- Core Functions ---
 
-void drawOnboardScreen() {
-  onboard_u8g2.clearBuffer();
-  onboard_u8g2.drawStr(0, 10, "Debug Info");
-  onboard_u8g2.drawHLine(0, 14, 128);
-
-  // Motor Status
-  onboard_u8g2.drawStr(0, 25, "Motor:");
-  onboard_u8g2.drawStr(50, 25, motorRunning ? "ON" : "OFF");
-
-  // Speed Value
-  onboard_u8g2.drawStr(0, 38, "Speed:");
-  char speedStr[8];
-  sprintf(speedStr, "%d", motorSpeed);
-  onboard_u8g2.drawStr(50, 38, speedStr);
-
-  // Total Run Time
-  onboard_u8g2.drawStr(0, 51, "Run Time:");
-  unsigned long sec = totalRunTimeMs / 1000;
-  unsigned long min = sec / 60;
-  unsigned long hr = min / 60;
-  char timeStr[16];
-  sprintf(timeStr, "%02luh %02lum %02lus", hr, min % 60, sec % 60);
-  onboard_u8g2.drawStr(50, 51, timeStr);
-
-  // Debug (show saved speed)
-  onboard_u8g2.drawStr(0, 64, "Saved:");
-  char savedStr[8];
-  sprintf(savedStr, "%d", savedSpeed);
-  onboard_u8g2.drawStr(50, 64, savedStr);
-
-  onboard_u8g2.sendBuffer();
-}
+// Removed drawOnboardScreen function
 
 void drawSH1106Screen() {
   sh1106_u8g2.clearBuffer();
@@ -186,30 +157,51 @@ void drawSH1106Screen() {
 void updateMotor() {
   if (motorRunning) {
     ledcWrite(PWM_CHANNEL, motorSpeed);
+    Serial.print("[DEBUG] ledcWrite PWM_CHANNEL: ");
+    Serial.print(PWM_CHANNEL);
+    Serial.print(", motorSpeed: ");
+    Serial.println(motorSpeed);
   } else {
     ledcWrite(PWM_CHANNEL, 0);
+    Serial.print("[DEBUG] ledcWrite PWM_CHANNEL: ");
+    Serial.print(PWM_CHANNEL);
+    Serial.println(", motorSpeed: 0 (OFF)");
   }
   Serial.print("Motor state: ");
   Serial.print(motorRunning ? "ON" : "OFF");
   Serial.print(", Speed PWM: ");
   Serial.println(motorSpeed);
+  Serial.print("[DEBUG] MOTOR_IN1: ");
+  Serial.print(digitalRead(MOTOR_IN1));
+  Serial.print(", MOTOR_IN2: ");
+  Serial.println(digitalRead(MOTOR_IN2));
 }
 
 // --- Input Handling ---
 
 void checkEncoder() {
   static int lastPos = 0;
+  static unsigned long lastChange = 0;
+  const unsigned long debounceMs = 5; // 5ms debounce
   encoder.tick();
   int newPos = encoder.getPosition();
 
   if (newPos != lastPos) {
-    if (newPos > lastPos) {
-      motorSpeed = min(motorSpeed + 5, MAX_SPEED);
-    } else {
-      motorSpeed = max(motorSpeed - 5, MIN_SPEED);
+    unsigned long now = millis();
+    if (now - lastChange > debounceMs) {
+      if (newPos > lastPos) {
+        motorSpeed = min(motorSpeed + 10, MAX_SPEED);
+      } else {
+        motorSpeed = max(motorSpeed - 10, MIN_SPEED);
+      }
+      lastPos = newPos;
+      lastChange = now;
+      updateMotor(); // Update motor speed immediately on change
+      Serial.print("Encoder position: ");
+      Serial.print(newPos);
+      Serial.print(" | Motor speed: ");
+      Serial.println(motorSpeed);
     }
-    lastPos = newPos;
-    updateMotor(); // Update motor speed immediately on change
   }
 }
 
@@ -220,15 +212,22 @@ void handleEncoderClick() {
 }
 
 void handleBackClick() {
-  // Revert speed to the last saved value
-  motorSpeed = savedSpeed;
-  Serial.println("Back button clicked. Reverting to saved speed.");
+  // Increase speed
+  motorSpeed = min(motorSpeed + 10, MAX_SPEED);
+  Serial.println("Back button clicked. Speed increased.");
   updateMotor();
 }
 
 void handleConfirmClick() {
+  // Decrease speed
+  motorSpeed = max(motorSpeed - 10, MIN_SPEED);
+  Serial.println("Confirm button clicked. Speed decreased.");
+  updateMotor();
+}
+
+void handleLongPressConfirm() {
   // Save the current speed
   savedSpeed = motorSpeed;
-  Serial.println("Confirm button clicked. Speed saved.");
+  Serial.println("Long press: Speed confirmed and saved.");
   // You could also save this to EEPROM/Preferences for persistence
 }
